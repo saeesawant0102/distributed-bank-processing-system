@@ -3,24 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --bg-app: #0b0f19;
-  --bg-surface: #111827;
-  --bg-card: #151e32;
-  --bg-card-subtle: #0f172a;
-  --border-subtle: #1e293b;
-  --border-muted: #27354f;
+  --bg-app: #080c14;
+  --bg-sidebar: #0b101d;
+  --bg-surface: #0e1526;
+  --bg-card: #121b2d;
+  --bg-card-dark: #0d1322;
+  --border-subtle: #1c273c;
+  --border-muted: #273654;
   --border-focus: #3b82f6;
 
-  --text-primary: #f1f5f9;
+  --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
 
-  --accent-blue: #2563eb;
-  --accent-blue-hover: #1d4ed8;
+  --accent-blue: #3b82f6;
+  --accent-blue-hover: #2563eb;
   --accent-emerald: #10b981;
   --accent-rose: #ef4444;
   --accent-amber: #f59e0b;
-  --accent-purple: #8b5cf6;
+  --accent-purple: #a855f7;
 
   --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -39,19 +40,36 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
 }
 
 code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Professional technical dashboard panels */
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080c14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1c273c;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3a58;
+}
+
+/* Technical Dashboard Panels - Clean Modern Aesthetics */
 .dash-panel {
   background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  transition: border-color 0.15s ease;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dash-panel:hover {
@@ -59,140 +77,141 @@ code, pre, .font-mono {
 }
 
 .dash-panel-subtle {
-  background-color: var(--bg-card-subtle);
+  background-color: #0b111e;
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: #0b0f19;
-}
-::-webkit-scrollbar-thumb {
-  background: #222f49;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #334466;
-}
-
-/* Professional buttons */
+/* Clean Button Utilities */
 .btn-primary {
   background-color: var(--accent-blue);
   color: #ffffff;
   border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 0.75rem;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: background-color 0.15s ease;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
 }
 .btn-primary:hover {
   background-color: var(--accent-blue-hover);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+  transform: translateY(-1px);
 }
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .btn-secondary {
-  background-color: #1e293b;
+  background-color: #172236;
   color: #cbd5e1;
   border: 1px solid var(--border-muted);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 0.75rem;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.15s ease;
+  gap: 8px;
+  transition: all 0.2s ease;
 }
 .btn-secondary:hover {
-  background-color: #28374d;
+  background-color: #21304b;
   color: #ffffff;
-  border-color: #3b4d6b;
+  border-color: #3b5078;
 }
 
 .btn-danger {
   background-color: rgba(239, 68, 68, 0.12);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 6px;
-  padding: 5px 10px;
+  border-radius: 8px;
+  padding: 6px 12px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 .btn-danger:hover {
-  background-color: rgba(239, 68, 68, 0.22);
-  border-color: rgba(239, 68, 68, 0.5);
+  background-color: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
 }
 
 .btn-success {
   background-color: rgba(16, 185, 129, 0.12);
   color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 6px;
-  padding: 5px 10px;
+  border-radius: 8px;
+  padding: 6px 12px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 .btn-success:hover {
-  background-color: rgba(16, 185, 129, 0.22);
-  border-color: rgba(16, 185, 129, 0.5);
+  background-color: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.6);
 }
 
-/* Technical data tables */
+/* Clean Tables */
 .data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.75rem;
 }
 .data-table th {
   text-align: left;
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-weight: 600;
   color: #94a3b8;
-  background-color: rgba(15, 23, 42, 0.8);
+  background-color: #0b111e;
   border-bottom: 1px solid var(--border-subtle);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   font-size: 0.6875rem;
 }
 .data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(30, 41, 59, 0.7);
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(28, 39, 60, 0.6);
   color: #e2e8f0;
 }
+.data-table tr:last-child td {
+  border-bottom: none;
+}
 .data-table tr:hover td {
-  background-color: rgba(30, 41, 59, 0.35);
+  background-color: rgba(30, 44, 70, 0.3);
 }
 
-/* Subtle status pulse */
+/* Animations */
 @keyframes subtle-pulse {
-  0% { opacity: 0.7; }
+  0% { opacity: 0.6; }
   50% { opacity: 1; }
-  100% { opacity: 0.7; }
+  100% { opacity: 0.6; }
 }
 .pulse-subtle {
   animation: subtle-pulse 2s infinite ease-in-out;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { api } from '../../services/api';
-import { ExperimentDescription } from '../../components/ExperimentDescription';
+import { ExperimentHeader } from '../../components/ExperimentHeader';
 import { SimulationControls } from '../../components/SimulationControls';
 import { EventLog } from '../../components/EventLog';
 import { ResultBanner } from '../../components/ResultBanner';
@@ -47,270 +47,237 @@ export function ClockExperiment({ sim }) {
     }
   };
 
+  const clockEvents = displayedEvents.filter(
+    (e) => e.experiment === 'clock' || e.type?.includes('CLOCK')
+  );
+
   return (
     <div className="space-y-4">
-      <ExperimentDescription
-        title="Experiment 3: Clock Synchronization"
-        concept="Physical computer clocks drift due to quartz oscillator thermal variance. Cristian's algorithm uses a central authoritative time server with RTT/2 latency compensation. Berkeley algorithm uses an elected master that polls nodes, averages offsets, and distributes adjustments without requiring external UTC sources. Lamport logical clocks order distributed events causally without physical clocks using L = max(L, L_msg) + 1."
-        scenario="Nodes 1 to 4 record distributed bank transactions. Without synchronization, an audit record on Node 1 at 10:00:05 appears after a transfer recorded at 10:00:12 on Node 2, inverting the apparent order of operations in the audit log."
+      {/* HEADER */}
+      <ExperimentHeader
+        number="03"
+        title="CLOCK SYNC"
+        subtitle="Clock Synchronization Algorithms Simulation"
+        concept="Physical computer clock offset drift compensation and logical Lamport timestamp causality ordering."
         viva={[
           {
-            q: "How does Cristian's algorithm estimate one-way network latency?",
-            a: "It measures round-trip time (RTT = T1 - T0) and assumes symmetric delay, calculating the new clock as Ts + RTT/2 with error bounded by ±RTT/2.",
-          },
-          {
-            q: "Why is Berkeley algorithm suitable for isolated local networks?",
-            a: "Berkeley does not rely on an external authoritative time server; it establishes an internal consensus by averaging all clocks in the group.",
-          },
-          {
-            q: "What is the update rule for Lamport logical timestamps?",
-            a: "For local events or sends: L = L + 1. For receiving a message with attached timestamp L_msg: L = max(L_local, L_msg) + 1.",
+            q: "How does Cristian's algorithm calculate latency?",
+            a: "It measures round-trip time (RTT = T1 - T0) and updates the clock as Ts + RTT/2.",
           },
         ]}
       />
 
-      {/* Outcome Banner */}
+      {/* LARGE SIMULATION CANVAS (60-70% Height) */}
+      <div className="dash-panel p-5 bg-[#090e1a] border-blue-500/30 flex flex-col justify-between min-h-[380px]">
+        <div className="flex items-center justify-between pb-2 mb-3 border-b border-[#1e293b]">
+          <h3 className="font-bold text-xs text-slate-100 uppercase tracking-wider font-mono flex items-center gap-2">
+            <Clock className="w-4 h-4 text-blue-400" />
+            SIMULATION CANVAS — Cluster Node Clocks & Synchronization
+          </h3>
+          <span className="text-[11px] font-mono text-slate-400">Baseline: 10:00:00</span>
+        </div>
+
+        {/* Algorithm Tabs */}
+        <div className="flex border-b border-[#1e293b] gap-2 font-mono text-xs mb-3">
+          {[
+            { id: 'berkeley', label: '1. Berkeley Master Averaging' },
+            { id: 'cristian', label: "2. Cristian's Time Server (RTT/2)" },
+            { id: 'lamport', label: '3. Lamport Logical Clocks' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              id={`tab-${tab.id}-btn`}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setSyncResult(null);
+              }}
+              className={`pb-2 px-3 font-bold border-b-2 transition-all ${
+                activeTab === tab.id
+                  ? 'border-blue-500 text-blue-400 bg-blue-500/10'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 4 Digital Clock Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+          {nodes.map((node) => {
+            const baseHours = 10;
+            const baseMins = 0;
+            const offsetSec = node.clockOffset || 0;
+            const displaySec = (60 + offsetSec) % 60;
+            const timeString = `${baseHours}:${String(baseMins).padStart(2, '0')}:${String(displaySec).padStart(2, '0')}`;
+
+            return (
+              <div
+                key={node.id}
+                className="p-3 rounded-xl bg-[#0f172a] border border-[#1e293b] flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-mono font-bold text-xs text-slate-100">Node {node.id}</span>
+                    <span className="text-[10px] font-mono text-slate-400">({node.name})</span>
+                  </div>
+
+                  <div className="text-center my-1 p-2 rounded-lg bg-[#060a12] border border-slate-800">
+                    <div className="text-xl font-bold font-mono text-slate-100 tracking-wider">
+                      {timeString}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                      Offset:{' '}
+                      <span className={offsetSec === 0 ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+                        {offsetSec > 0 ? `+${offsetSec}` : offsetSec}s
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-1.5 border-t border-slate-800/80 flex justify-between items-center text-[10px] font-mono text-slate-400">
+                  <span>Lamport L: <strong className="text-purple-400">{node.lamport || 0}</strong></span>
+                  {activeTab === 'cristian' && node.id === 1 && <span className="text-blue-400 font-bold">Time Server</span>}
+                  {activeTab === 'berkeley' && node.id === 1 && <span className="text-blue-400 font-bold">Master</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Algorithm Math & Details Card */}
+        <div className="p-3 rounded-xl bg-[#060a12] border border-[#1e293b]">
+          {activeTab === 'cristian' && (
+            <div className="space-y-1.5 font-mono text-xs">
+              <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5" /> Cristian's Protocol RTT Latency Calculation
+              </h4>
+              <div className="p-2.5 rounded bg-[#090e1a] border border-slate-800 space-y-1 text-[11px]">
+                <div className="text-slate-300">• T0 Request = 100ms | Ts Server Time = 10:00:00.000 | T1 Receive = 300ms</div>
+                <div className="text-slate-300">• RTT = T1 - T0 = 200 ms | One-Way Delay = RTT / 2 = 100 ms</div>
+                <div className="text-emerald-400 font-bold">• Synchronized Clock = Ts + (RTT / 2) = 10:00:00.100 UTC</div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'berkeley' && (
+            <div className="space-y-1.5 font-mono text-xs">
+              <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Share2 className="w-3.5 h-3.5" /> Berkeley Master Offset Averaging & Distribution
+              </h4>
+              <div className="p-2.5 rounded bg-[#090e1a] border border-slate-800 space-y-1 text-[11px]">
+                <div className="text-slate-300">1. Master Node 1 gathered offsets: [0s, +7s, -8s, +3s]</div>
+                <div className="text-slate-300">2. Average offset = (0 + 7 - 8 + 3) / 4 = <strong className="text-amber-400">+0.5s</strong></div>
+                <div className="text-emerald-400 font-bold">3. Adjustments: N1 (+0.5s), N2 (-6.5s), N3 (+8.5s), N4 (-2.5s)</div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'lamport' && (
+            <div className="space-y-1.5 font-mono text-xs">
+              <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5" /> Lamport Causal Event Sequence
+              </h4>
+              <div className="overflow-x-auto max-h-32">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>STEP</th>
+                      <th>NODE</th>
+                      <th>EVENT TYPE</th>
+                      <th>DESCRIPTION</th>
+                      <th className="text-right">LAMPORT TIME (L)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {syncResult?.history?.map((stepItem, idx) => (
+                      <tr key={idx}>
+                        <td className="font-mono text-slate-400">#{idx + 1}</td>
+                        <td className="font-mono text-blue-400 font-bold">Node {stepItem.nodeId}</td>
+                        <td>
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-800 text-slate-300 font-mono">
+                            {stepItem.type}
+                          </span>
+                        </td>
+                        <td className="text-slate-200 font-sans">{stepItem.desc}</td>
+                        <td className="font-mono font-bold text-right text-purple-400">
+                          L = {stepItem.clock}
+                        </td>
+                      </tr>
+                    )) || (
+                      <tr>
+                        <td colSpan={5} className="text-center py-3 text-slate-500 italic font-sans">
+                          Click 'Execute Synchronization' below to step through Lamport events.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* CONTROLS & LIVE EVENTS ROW */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* CONTROLS */}
+        <div className="dash-panel p-4 flex flex-col justify-between">
+          <div>
+            <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider font-mono mb-3">
+              CONTROLS
+            </h4>
+
+            <div className="p-3 rounded-lg bg-[#060a12] border border-[#1e293b] font-mono text-xs space-y-1">
+              <div className="text-slate-400">Active Algorithm:</div>
+              <div className="text-blue-400 font-bold uppercase">{activeTab} Sync</div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[#1e293b] space-y-3">
+            <button
+              id="run-clock-sync-btn"
+              onClick={handleSync}
+              disabled={loading}
+              className="btn-primary w-full justify-center py-2 text-xs font-bold"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>{loading ? 'Synchronizing...' : `Execute ${activeTab.toUpperCase()} Synchronization`}</span>
+            </button>
+
+            <SimulationControls
+              isPlaying={isPlaying}
+              onPlay={play}
+              onPause={pause}
+              onStep={step}
+              onReset={reset}
+              speed={speed}
+              onSpeedChange={setSpeed}
+              queueLength={eventQueue.length}
+            />
+          </div>
+        </div>
+
+        {/* LIVE EVENTS */}
+        <div className="h-full">
+          <EventLog events={clockEvents.length > 0 ? clockEvents : displayedEvents} onClear={clearLog} maxHeight="320px" />
+        </div>
+      </div>
+
+      {/* RESULT / CURRENT STATE BANNER */}
       {syncResult && (
         <ResultBanner
           type="success"
           title={`Clock Synchronization Completed (${activeTab.toUpperCase()})`}
           description={
             activeTab === 'berkeley'
-              ? `Master Node 1 calculated average cluster offset: ${syncResult.averageOffset >= 0 ? '+' : ''}${syncResult.averageOffset}s. All node clocks adjusted to common baseline.`
+              ? `Master Node 1 calculated average offset: ${syncResult.averageOffset >= 0 ? '+' : ''}${syncResult.averageOffset}s. Clocks synchronized.`
               : activeTab === 'cristian'
-              ? `Client Node 3 synchronized with Time Server Node 1. Measured RTT: ${syncResult.rtt}ms. Estimated delay: ${syncResult.rtt / 2}ms.`
-              : 'Lamport logical clock sequence verified causal event ordering across nodes.'
-          }
-          details={
-            activeTab === 'berkeley' && syncResult.adjustments
-              ? syncResult.adjustments.map((a) => `Node ${a.nodeId}: adj ${a.adjustment >= 0 ? '+' : ''}${a.adjustment}s (Offset: ${a.newOffset}s)`).join(' | ')
-              : null
+              ? `Client Node 3 synchronized with Time Server Node 1. RTT: ${syncResult.rtt}ms.`
+              : 'Lamport logical clock sequence verified causal event ordering.'
           }
         />
       )}
-
-      {/* Clean Algorithm Selection Tabs */}
-      <div className="flex border-b border-[#1e293b] gap-2 font-mono text-xs">
-        {[
-          { id: 'berkeley', label: 'Berkeley Algorithm (Master Averaging)' },
-          { id: 'cristian', label: "Cristian's Algorithm (Time Server + RTT/2)" },
-          { id: 'lamport', label: 'Lamport Logical Clocks (Causal Ordering)' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            id={`tab-${tab.id}-btn`}
-            onClick={() => {
-              setActiveTab(tab.id);
-              setSyncResult(null);
-            }}
-            className={`pb-2.5 px-3 font-semibold border-b-2 transition-all ${
-              activeTab === tab.id
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Node Clock Status Table */}
-      <div className="dash-panel p-3.5">
-        <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#1e293b]">
-          <h4 className="font-semibold text-xs text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-blue-400" />
-            Cluster Node Clocks (Nodes 1–4)
-          </h4>
-          <span className="text-[11px] font-mono text-slate-400">Reference: 10:00:00</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>NODE</th>
-                <th>SIMULATED TIME</th>
-                <th>CLOCK SKEW</th>
-                <th>LAMPORT (L)</th>
-                <th>ROLE IN ALGORITHM</th>
-              </tr>
-            </thead>
-            <tbody>
-              {nodes.map((node) => {
-                const baseHours = 10;
-                const baseMins = 0;
-                const offsetSec = node.clockOffset || 0;
-                const displaySec = (60 + offsetSec) % 60;
-                const timeString = `${baseHours}:${String(baseMins).padStart(2, '0')}:${String(
-                  displaySec
-                ).padStart(2, '0')}`;
-
-                return (
-                  <tr key={node.id}>
-                    <td className="font-medium font-mono text-slate-200">
-                      N{node.id} ({node.name})
-                    </td>
-                    <td className="font-mono font-bold text-slate-100">
-                      {timeString}
-                    </td>
-                    <td className="font-mono">
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${
-                          offsetSec === 0
-                            ? 'text-emerald-400 bg-emerald-950/30'
-                            : offsetSec > 0
-                            ? 'text-amber-400 bg-amber-950/30'
-                            : 'text-blue-400 bg-blue-950/30'
-                        }`}
-                      >
-                        {offsetSec > 0 ? `+${offsetSec}` : offsetSec}s
-                      </span>
-                    </td>
-                    <td className="font-mono font-semibold text-purple-400">
-                      {node.lamport || 0}
-                    </td>
-                    <td className="text-[11px] text-slate-300">
-                      {activeTab === 'cristian' && node.id === 1 && (
-                        <span className="text-blue-400 font-mono font-semibold">Authoritative Time Server</span>
-                      )}
-                      {activeTab === 'cristian' && node.id === 3 && (
-                        <span className="text-purple-400 font-mono font-semibold">Client (Synchronizing)</span>
-                      )}
-                      {activeTab === 'cristian' && node.id !== 1 && node.id !== 3 && 'Idle Peer'}
-
-                      {activeTab === 'berkeley' && node.id === 1 && (
-                        <span className="text-blue-400 font-mono font-semibold">Elected Master</span>
-                      )}
-                      {activeTab === 'berkeley' && node.id !== 1 && 'Polled Peer'}
-
-                      {activeTab === 'lamport' && 'Message Participant'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Algorithm Specific Details & Math */}
-      <div className="dash-panel p-3.5">
-        {activeTab === 'cristian' && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5" /> Cristian's Algorithm Calculations
-            </h4>
-            <div className="p-3 rounded bg-[#0b101d] border border-[#1e293b] font-mono text-xs space-y-1.5">
-              <div>
-                Formula: <span className="text-blue-400 font-bold">newTime = Ts + (T1 - T0) / 2</span>
-              </div>
-              <div className="text-slate-400 text-[11px]">
-                • T0 = Client request timestamp (100 ms) | Ts = Server authoritative timestamp (1000 ms)
-              </div>
-              <div className="text-slate-400 text-[11px]">
-                • T1 = Client response receive timestamp (300 ms) | Round-Trip Time (RTT) = 200 ms
-              </div>
-              <div className="text-emerald-400 text-[11px]">
-                • Calculated newTime = 1100 ms | Error bound ≤ ±100 ms
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'berkeley' && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Share2 className="w-3.5 h-3.5" /> Berkeley Master-Slave Averaging
-            </h4>
-            <div className="p-3 rounded bg-[#0b101d] border border-[#1e293b] font-mono text-xs space-y-1.5">
-              <div className="text-slate-300">
-                1. Master polls Nodes 1–4: Relative offsets gathered = [0s, +7s, -8s, +3s]
-              </div>
-              <div className="text-slate-300">
-                2. Average offset = (0 + 7 - 8 + 3) / 4 = <span className="text-amber-400 font-bold">+0.5s</span>
-              </div>
-              <div className="text-slate-300">
-                3. Dispatched adjustments: Node 1 (+0.5s), Node 2 (-6.5s), Node 3 (+8.5s), Node 4 (-2.5s)
-              </div>
-              <div className="text-emerald-400 text-[11px]">
-                Result: All node clocks converge to the exact same average time without external time reference.
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'lamport' && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5" /> Lamport Logical Clock Sequence
-            </h4>
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>STEP</th>
-                    <th>NODE</th>
-                    <th>EVENT TYPE</th>
-                    <th>DESCRIPTION</th>
-                    <th className="text-right">LOGICAL CLOCK (L)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {syncResult?.history?.map((stepItem, idx) => (
-                    <tr key={idx}>
-                      <td className="font-mono text-slate-400">#{idx + 1}</td>
-                      <td className="font-mono text-blue-400">Node {stepItem.nodeId}</td>
-                      <td>
-                        <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 font-mono">
-                          {stepItem.type}
-                        </span>
-                      </td>
-                      <td className="text-slate-300">{stepItem.desc}</td>
-                      <td className="font-mono font-bold text-right text-purple-400">
-                        {stepItem.clock}
-                      </td>
-                    </tr>
-                  )) || (
-                    <tr>
-                      <td colSpan={5} className="text-center py-4 text-slate-500 italic font-sans">
-                        Click 'Execute Synchronization' below to step through causal Lamport events.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Action Button */}
-        <div className="mt-3 pt-2 border-t border-[#1e293b]">
-          <button
-            id="run-clock-sync-btn"
-            onClick={handleSync}
-            disabled={loading}
-            className="btn-primary py-1.5 px-4 text-xs"
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>{loading ? 'Synchronizing...' : `Execute ${activeTab.toUpperCase()} Synchronization`}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Simulation Controls */}
-      <SimulationControls
-        isPlaying={isPlaying}
-        onPlay={play}
-        onPause={pause}
-        onStep={step}
-        onReset={reset}
-        speed={speed}
-        onSpeedChange={setSpeed}
-        queueLength={eventQueue.length}
-      />
-
-      {/* Event Console */}
-      <EventLog events={displayedEvents} onClear={clearLog} />
     </div>
   );
 }

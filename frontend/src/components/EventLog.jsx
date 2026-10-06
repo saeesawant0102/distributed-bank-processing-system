@@ -3,9 +3,22 @@ import { Terminal, Trash2, Search, ChevronRight, ChevronDown } from 'lucide-reac
 
 export function EventLog({ events = [], onClear, maxHeight = '280px' }) {
   const [filter, setFilter] = useState('');
+  const [levelFilter, setLevelFilter] = useState('ALL');
   const [expandedId, setExpandedId] = useState(null);
 
   const filteredEvents = events.filter((e) => {
+    // Level filter matching
+    if (levelFilter === 'ERROR' && !(e.type?.includes('RACE') || e.type?.includes('FAILED') || e.type?.includes('TIMEOUT'))) {
+      return false;
+    }
+    if (levelFilter === 'WARN' && !(e.type?.includes('ELECTED') || e.type?.includes('COORDINATOR') || e.type?.includes('PRIMARY') || e.type?.includes('LOCK'))) {
+      return false;
+    }
+    if (levelFilter === 'INFO' && (e.type?.includes('RACE') || e.type?.includes('FAILED') || e.type?.includes('TIMEOUT'))) {
+      return false;
+    }
+
+    // Search query matching
     if (!filter) return true;
     const q = filter.toLowerCase();
     return (
@@ -24,45 +37,62 @@ export function EventLog({ events = [], onClear, maxHeight = '280px' }) {
       return 'bg-red-950/40 text-red-400 border-red-800/40';
     }
     if (type.includes('ELECTED') || type.includes('COORDINATOR') || type.includes('PRIMARY')) {
-      return 'bg-purple-950/40 text-purple-300 border-purple-800/40';
+      return 'bg-amber-950/40 text-amber-300 border-amber-800/40';
     }
     if (type.includes('COMPLETED') || type.includes('SUCCESS') || type.includes('ACK')) {
       return 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40';
     }
     if (type.includes('RPC')) {
-      return 'bg-blue-950/40 text-blue-300 border-blue-800/40';
+      return 'bg-indigo-950/40 text-indigo-300 border-indigo-800/40';
     }
     return 'bg-slate-800 text-slate-300 border-slate-700';
   };
 
   return (
-    <div className="dash-panel p-3 flex flex-col h-full" id="event-log-panel">
+    <div className="dash-panel p-3.5 flex flex-col h-full bg-[#121a2f] border-[#1f2a44]" id="event-log-panel">
       {/* Console Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#1e293b]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#1f2a44] gap-2">
         <div className="flex items-center gap-2">
-          <Terminal className="w-3.5 h-3.5 text-blue-400" />
-          <h3 className="font-semibold text-xs text-slate-200 uppercase tracking-wider">
+          <Terminal className="w-4 h-4 text-indigo-400" />
+          <h3 className="font-semibold text-xs text-slate-200 uppercase tracking-wider font-mono">
             System Event Console
           </h3>
-          <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-slate-800/70 text-slate-400">
-            {events.length} logs
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#0b1020] text-slate-400 border border-[#1f2a44]">
+            {filteredEvents.length} logs
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Filter Chips & Search Input */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 bg-[#0b1020] p-0.5 rounded-lg border border-[#1f2a44]">
+            {['ALL', 'INFO', 'WARN', 'ERROR'].map((chip) => (
+              <button
+                key={chip}
+                onClick={() => setLevelFilter(chip)}
+                className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all ${
+                  levelFilter === chip
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#151e32]'
+                }`}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+
           <div className="relative">
             <input
               type="text"
-              placeholder="Search events..."
+              placeholder="Search logs..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="bg-[#0b101d] border border-[#222f49] text-xs px-2 py-1 rounded text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 w-36 sm:w-48 font-mono"
+              className="bg-[#0b1020] border border-[#1f2a44] text-xs px-2.5 py-1 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-32 sm:w-44 font-mono"
             />
           </div>
           {onClear && (
             <button
               onClick={onClear}
-              className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors"
+              className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors border border-[#1f2a44]"
               title="Clear event log"
             >
               <Trash2 className="w-3.5 h-3.5" />

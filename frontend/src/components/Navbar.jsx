@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  Landmark,
+  Beaker,
+  Layers,
   Radio,
   Cpu,
   Clock,
@@ -10,104 +11,117 @@ import {
   Scale,
   ShieldAlert,
   RotateCcw,
-  Activity,
-  Layers,
+  ShieldCheck,
 } from 'lucide-react';
 
-export function Navbar({ connected = false, nodes = [], onReset }) {
+export function Navbar({ connected = false, nodes = [], coordinatorId = 5, primaryId = 1, epoch = 1, onReset }) {
   const aliveCount = nodes.filter((n) => n.alive).length;
   const totalCount = nodes.length || 5;
 
   const navItems = [
     { to: '/', label: 'Overview', icon: Layers },
-    { to: '/rpc', label: '1. RPC', icon: Radio },
-    { to: '/threads', label: '2. Multithreading', icon: Cpu },
-    { to: '/clock', label: '3. Clock Sync', icon: Clock },
-    { to: '/election', label: '4. Leader Election', icon: Crown },
-    { to: '/replication', label: '5. Replication', icon: Database },
-    { to: '/load', label: '6. Load Balancing', icon: Scale },
-    { to: '/failover', label: '7. Fault Tolerance', icon: ShieldAlert },
+    { to: '/rpc', label: '01. RPC Protocol', icon: Radio },
+    { to: '/threads', label: '02. Multithreading', icon: Cpu },
+    { to: '/clock', label: '03. Clock Sync', icon: Clock },
+    { to: '/election', label: '04. Leader Election', icon: Crown },
+    { to: '/replication', label: '05. Data Replication', icon: Database },
+    { to: '/load', label: '06. Load Balancing', icon: Scale },
+    { to: '/failover', label: '07. Fault Tolerance', icon: ShieldAlert },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0d1322] border-b border-[#1e293b]">
-      {/* Top Application Bar */}
-      <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
-        {/* Brand & Lab Tag */}
+    <header className="sticky top-0 z-50 bg-[#0b101d] border-b border-[#1c273c] shadow-lg font-sans">
+      {/* Top Application Status Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        {/* Brand & Project Info */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-            <Landmark className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-lg bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+            <Beaker className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold tracking-tight text-slate-100">
+              <span className="font-extrabold text-sm sm:text-base text-slate-100 tracking-tight">
                 Distributed Bank Processing System
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 font-medium">
-                DC LAB
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-950/80 text-blue-300 border border-blue-800/40 font-bold">
+                DC Lab Simulator
               </span>
             </div>
-            <div className="text-[11px] text-slate-400 flex items-center gap-2">
-              <span>SPIT SEM-5 Lab Simulator</span>
-              <span>•</span>
-              <span className="font-mono text-slate-500">Node Cluster: 5 Nodes</span>
+            <div className="text-xs text-slate-400 font-mono hidden sm:block">
+              SPIT SEM-5 Project • Interactive Distributed Systems Simulation
             </div>
           </div>
         </div>
 
-        {/* System Telemetry & Cluster State */}
-        <div className="flex items-center gap-2.5 text-xs">
+        {/* Telemetry Status Pills & Actions */}
+        <div className="flex items-center gap-2.5 text-xs font-mono">
           {/* WS Status */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131b2e] border border-[#222f49] text-[11px] font-mono text-slate-300">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#080c14] border border-[#1c273c] text-slate-300">
             <span
-              className={`w-2 h-2 rounded-full ${
-                connected ? 'bg-emerald-500' : 'bg-red-500'
+              className={`w-2.5 h-2.5 rounded-full ${
+                connected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
               }`}
             />
-            <span className="text-slate-400">Status:</span>
-            <span className={connected ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>
-              {connected ? 'Cluster Running' : 'Offline'}
+            <span className="text-slate-400 hidden sm:inline">Status:</span>
+            <span className={connected ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+              {connected ? 'Running' : 'Offline'}
             </span>
           </div>
 
-          {/* Active Nodes Count */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131b2e] border border-[#222f49] text-[11px] font-mono text-slate-300">
+          {/* Active Nodes */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#080c14] border border-[#1c273c] text-slate-300">
             <span className="text-slate-400">Nodes:</span>
-            <span className="text-blue-400 font-semibold">{aliveCount} / {totalCount} Active</span>
+            <span className="text-blue-400 font-bold">{aliveCount}/{totalCount} Active</span>
+          </div>
+
+          {/* Coordinator */}
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#080c14] border border-[#1c273c] text-slate-300">
+            <Crown className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-slate-400">Coord:</span>
+            <span className="text-purple-300 font-bold">N{coordinatorId}</span>
+          </div>
+
+          {/* Primary */}
+          <div className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#080c14] border border-[#1c273c] text-slate-300">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-slate-400">Primary:</span>
+            <span className="text-emerald-400 font-bold">N{primaryId} (e{epoch})</span>
           </div>
 
           {/* Global Reset */}
           {onReset && (
             <button
               onClick={onReset}
-              className="p-1.5 rounded bg-[#131b2e] hover:bg-[#1a253e] border border-[#222f49] text-slate-400 hover:text-red-400 transition-colors"
+              className="btn-secondary py-1.5 px-3 text-xs text-slate-200 hover:text-red-400 border-[#273654]"
               title="Reset Simulation Cluster to Defaults"
-              id="global-reset-btn"
+              id="global-navbar-reset-btn"
             >
               <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Reset Cluster</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Navigation Tabs Bar */}
-      <div className="border-t border-[#1a2438] bg-[#0b101d]">
-        <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto no-scrollbar">
+      {/* Horizontal Navigation Tab Bar */}
+      <div className="border-t border-[#1c273c] bg-[#080c14]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.to === '/'}
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-3 py-2 text-xs font-medium whitespace-nowrap border-b-2 transition-all ${
+                  `flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono whitespace-nowrap transition-all ${
                     isActive
-                      ? 'border-blue-500 text-blue-400 bg-blue-500/5 font-semibold'
-                      : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                      ? 'bg-blue-600/15 text-blue-300 border border-blue-500/40 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#121b2d] font-medium'
                   }`
                 }
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-3.5 h-3.5 text-slate-400" />
                 <span>{item.label}</span>
               </NavLink>
             );
